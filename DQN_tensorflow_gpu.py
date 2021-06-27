@@ -18,7 +18,7 @@ import os
 REPLAY_SIZE = 2000
 # memory size 1000
 # size of minibatch
-small_BATCH_SIZE = 16
+small_BATCH_SIZE = 22
 big_BATCH_SIZE = 128
 BATCH_SIZE_door = 1000
 
@@ -105,10 +105,16 @@ class DQN():
             b_conv2 = self.bias_variable([64])
             # W_conv3 = self.weight_variable([5,5,64,128])
             # b_conv3 = self.bias_variable([128])
-            W1 = self.weight_variable([int((self.state_w/4) * (self.state_h/4) * 64), 512])
-            b1 = self.bias_variable([512])
-            W2 = self.weight_variable([512, 256])
-            b2 = self.bias_variable([256])
+            W1 = self.weight_variable([int((self.state_w/4) * (self.state_h/4) * 64), 1024])
+            b1 = self.bias_variable([1024])
+            W2 = self.weight_variable([1024, 512])
+            b2 = self.bias_variable([512])
+            W6 = self.weight_variable([512, 512])
+            b6 = self.bias_variable([512])
+            W4 = self.weight_variable([512, 256])
+            b4 = self.bias_variable([256])
+            W5 = self.weight_variable([256, 256])
+            b5 = self.bias_variable([256])
             W3 = self.weight_variable([256, self.action_dim])
             b3 = self.bias_variable([self.action_dim])
             # second, set the layers
@@ -135,8 +141,12 @@ class DQN():
             h_layer_two = tf.nn.relu(tf.matmul(h_layer_one, W2) + b2)
             # dropout
             h_layer_two = tf.nn.dropout(h_layer_two, 1)
+            h_layer_five = tf.nn.relu(tf.matmul(h_layer_two, W6) + b6)
+            h_layer_three = tf.nn.relu(tf.matmul(h_layer_five, W4) + b4)
+            h_layer_four = tf.nn.relu(tf.matmul(h_layer_three, W5) + b5)
+
             # the output of current_net
-            Q_value = tf.matmul(h_layer_two, W3) + b3
+            Q_value = tf.matmul(h_layer_four, W3) + b3
             # dropout
             self.Q_value = tf.nn.dropout(Q_value, 1)
         # third, create the current_net
@@ -148,10 +158,16 @@ class DQN():
             t_b_conv2 = self.bias_variable([64])
             # t_W_conv3 = self.weight_variable([5,5,64,128])
             # t_b_conv3 = self.bias_variable([128])
-            t_W1 = self.weight_variable([int((self.state_w/4) * (self.state_h/4) * 64), 512])
-            t_b1 = self.bias_variable([512])
-            t_W2 = self.weight_variable([512, 256])
-            t_b2 = self.bias_variable([256])
+            t_W1 = self.weight_variable([int((self.state_w/4) * (self.state_h/4) * 64), 1024])
+            t_b1 = self.bias_variable([1024])
+            t_W2 = self.weight_variable([1024, 512])
+            t_b2 = self.bias_variable([512])
+            t_W6 = self.weight_variable([512, 512])
+            t_b6 = self.bias_variable([512])
+            t_W4 = self.weight_variable([512, 256])
+            t_b4 = self.bias_variable([256])
+            t_W5 = self.weight_variable([256, 256])
+            t_b5 = self.bias_variable([256])
             t_W3 = self.weight_variable([256, self.action_dim])
             t_b3 = self.bias_variable([self.action_dim])
             # second, set the layers
@@ -164,7 +180,7 @@ class DQN():
             # conv layer two
             t_h_conv2 = tf.nn.relu(self.conv2d(t_h_pool1, t_W_conv2) + t_b_conv2)
             # pooling layer one
-            t_h_pool2 = self.max_pool_2x2(t_h_conv2) 
+            t_h_pool2 = self.max_pool_2x2(t_h_conv2)
             # self.state_w/4 * self.state_h/4 * 64
             # conv layer three
             # t_h_conv3 = tf.nn.relu(self.conv2d(t_h_pool2, t_W_conv3) + t_b_conv3) 
@@ -174,13 +190,16 @@ class DQN():
             t_h_layer_one = tf.nn.relu(tf.matmul(t_h_conv2_flat, t_W1) + t_b1)
             # dropout
             t_h_layer_one = tf.nn.dropout(t_h_layer_one, 1)
-            # 防止过拟合
+            # 防止过拟合kkmkm
             # hidden layer two
             t_h_layer_two = tf.nn.relu(tf.matmul(t_h_layer_one, t_W2) + t_b2)
             # dropout
             t_h_layer_two = tf.nn.dropout(t_h_layer_two, 1)
+            t_h_layer_five = tf.nn.relu(tf.matmul(t_h_layer_two, t_W6) + t_b6)
+            t_h_layer_three = tf.nn.relu(tf.matmul(t_h_layer_five, t_W4) + t_b4)
+            t_h_layer_four = tf.nn.relu(tf.matmul(t_h_layer_three, t_W5) + t_b5)
             # the output of current_net
-            target_Q_value = tf.matmul(t_h_layer_two, t_W3) + t_b3
+            target_Q_value = tf.matmul(t_h_layer_four, t_W3) + t_b3
             # dropout
             self.target_Q_value = tf.nn.dropout(target_Q_value, 1)
         # at last, solve the parameters replace problem
