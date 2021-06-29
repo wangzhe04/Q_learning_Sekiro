@@ -19,7 +19,7 @@ REPLAY_SIZE = 2000
 # memory size 1000
 # size of minibatch
 small_BATCH_SIZE = 16
-big_BATCH_SIZE = 128
+big_BATCH_SIZE = 64
 BATCH_SIZE_door = 1000
 
 # these are the hyper Parameters for DQN
@@ -105,14 +105,14 @@ class DQN():
             b_conv2 = self.bias_variable([64])
             W_conv3 = self.weight_variable([5,5,64,256])
             b_conv3 = self.bias_variable([256])
-            W_conv4 = self.weight_variable([5, 5, 256, 5632])
-            b_conv4 = self.bias_variable([5632])
+            W_conv4 = self.weight_variable([5, 5, 256, 128])
+            b_conv4 = self.bias_variable([128])
 
-            W1 = self.weight_variable([int((self.state_w/4) * (self.state_h/4) * 64), 1024])
-            b1 = self.bias_variable([1024])
-            W7 = self.weight_variable([1024, 1024])
-            b7 = self.bias_variable([1024])
-            W2 = self.weight_variable([1024, 512])
+            W1 = self.weight_variable([int((self.state_w/4) * (self.state_h/4) * 64), 512])
+            b1 = self.bias_variable([512])
+            W7 = self.weight_variable([512, 512])
+            b7 = self.bias_variable([512])
+            W2 = self.weight_variable([512, 512])
             b2 = self.bias_variable([512])
             W6 = self.weight_variable([512, 512])
             b6 = self.bias_variable([512])
@@ -138,14 +138,14 @@ class DQN():
             h_conv3 = tf.nn.relu(self.conv2d(h_pool2, W_conv3) + b_conv3)
             h_pool3 = self.max_pool_2x2(h_conv3)
 
-            h_conv4 = tf.nn.relu(self.conv2d(h_pool3, W_conv4) + b_conv4)
-            h_pool4 = self.max_pool_2x2(h_conv4)
+            # h_conv4 = tf.nn.relu(self.conv2d(h_pool3, W_conv4) + b_conv4)
+            # h_pool4 = self.max_pool_2x2(h_conv4)
             # self.state_w/4 * self.state_h/4 * 128
-            h_conv2_flat = tf.reshape(h_pool4, [-1, int((self.state_w / 4) * (self.state_h / 4) * 64)])
+            h_conv2_flat = tf.reshape(h_pool3, [-1, int((self.state_w / 4) * (self.state_h / 4) * 64)])
             # hidden layer one
             h_layer_one = tf.nn.relu(tf.matmul(h_conv2_flat, W1) + b1)
             # dropout
-            h_layer_one = tf.nn.dropout(h_layer_one, 1)
+            h_layer_one = tf.nn.dropout(h_layer_one, 0.6)
             # hidden layer two
             h_layer_seven = tf.nn.relu(tf.matmul(h_layer_one, W7) + b7)
             h_layer_two = tf.nn.relu(tf.matmul(h_layer_seven, W2) + b2)
@@ -168,14 +168,14 @@ class DQN():
             t_b_conv2 = self.bias_variable([64])
             t_W_conv3 = self.weight_variable([5,5,64,256])
             t_b_conv3 = self.bias_variable([256])
-            t_W_conv4 = self.weight_variable([5, 5, 256, 5632])
-            t_b_conv4 = self.bias_variable([5632])
+            t_W_conv4 = self.weight_variable([5, 5, 256, 128])
+            t_b_conv4 = self.bias_variable([128])
 
-            t_W1 = self.weight_variable([int((self.state_w/4) * (self.state_h/4) * 64), 1024])
-            t_b1 = self.bias_variable([1024])
-            t_W7 = self.weight_variable([1024, 1024])
-            t_b7 = self.bias_variable([1024])
-            t_W2 = self.weight_variable([1024, 512])
+            t_W1 = self.weight_variable([int((self.state_w/4) * (self.state_h/4) * 64), 512])
+            t_b1 = self.bias_variable([512])
+            t_W7 = self.weight_variable([512, 512])
+            t_b7 = self.bias_variable([512])
+            t_W2 = self.weight_variable([512, 512])
             t_b2 = self.bias_variable([512])
             t_W6 = self.weight_variable([512, 512])
             t_b6 = self.bias_variable([512])
@@ -201,18 +201,18 @@ class DQN():
             t_h_conv3 = tf.nn.relu(self.conv2d(t_h_pool2, t_W_conv3) + t_b_conv3)
             t_h_pool3 = self.max_pool_2x2(t_h_conv3)
 
-            t_h_conv4 = tf.nn.relu(self.conv2d(t_h_pool3, t_W_conv4) + t_b_conv4)
-            t_h_pool4 = self.max_pool_2x2(t_h_conv4)
+            # t_h_conv4 = tf.nn.relu(self.conv2d(t_h_pool3, t_W_conv4) + t_b_conv4)
+            # t_h_pool4 = self.max_pool_2x2(t_h_conv4)
 
             # self.state_w/4 * self.state_h/4 * 128
-            t_h_conv2_flat = tf.reshape(t_h_pool4, [-1, int((self.state_w / 4) * (self.state_h / 4) * 64)])
+            t_h_conv2_flat = tf.reshape(t_h_pool3, [-1, int((self.state_w / 4) * (self.state_h / 4) * 64)])
 
 
 
             # hidden layer one
             t_h_layer_one = tf.nn.relu(tf.matmul(t_h_conv2_flat, t_W1) + t_b1)
             # dropout
-            t_h_layer_one = tf.nn.dropout(t_h_layer_one, 1)
+            t_h_layer_one = tf.nn.dropout(t_h_layer_one, 0.6)
             # 防止过拟合
             # hidden layer two
             t_h_layer_seven = tf.nn.relu(tf.matmul(t_h_layer_one, t_W7) + t_b7)

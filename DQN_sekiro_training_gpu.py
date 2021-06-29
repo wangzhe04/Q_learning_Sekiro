@@ -52,7 +52,7 @@ def self_blood_count(self_gray):
         # self blood gray pixel 80~98
         # 血量灰度值80~98
         # print(self_bd_num)
-        if self_bd_num > 60 and self_bd_num < 82:
+        if self_bd_num > 70 and self_bd_num < 82:
             self_blood += 1
         # print(self_blood)
     return self_blood
@@ -62,7 +62,7 @@ def boss_blood_count(boss_gray):
     for boss_bd_num in boss_gray[0]:
     # boss blood gray pixel 65~75
     # 血量灰度值65~75 
-        if boss_bd_num > 65 and boss_bd_num < 75:
+        if boss_bd_num >= 48 and boss_bd_num < 62:
             boss_blood += 1
     return boss_blood
 
@@ -79,24 +79,48 @@ def take_action(action):
         directkeys.dodge()
 
 
-def action_judge(boss_blood, next_boss_blood, self_blood, next_self_blood, self_body, next_self_body, stop, emergence_break):
+def self_body_count(self_gray):
+    self_body = 0
+    for self_bd_num in self_gray[467]:
+        # self blood gray pixel 80~98
+        # 血量灰度值80~98
+        # print(self_bd_num)
+        if (self_bd_num > 80 and self_bd_num < 125):
+            self_body += 1
+        # print(self_blood)
+    return self_body
+
+def boss_body_count(boss_gray):
+    boss_body = 0
+    for boss_bd_num in boss_gray[0]:
+        # self blood gray pixel 80~98
+        # 血量灰度值80~98
+        # print(self_bd_num)
+        if (boss_bd_num > 80 and boss_bd_num < 125):
+            boss_body += 1
+        # print(self_blood)
+    return boss_body
+
+
+def action_judge(boss_blood, next_boss_blood, self_blood, next_self_blood,self_body,next_self_body,boss_body, next_boss_body, stop,
+                 emergence_break):
     # get action reward
     # emergence_break is used to break down training
     # 用于防止出现意外紧急停止训练防止错误训练数据扰乱神经网络
-    if next_self_blood < 3:     # self dead
+    if next_self_blood < 3:  # self dead
         if emergence_break < 2:
-            reward = -10
+            reward = -12
             done = 1
             stop = 0
             emergence_break += 1
             return reward, done, stop, emergence_break
         else:
-            reward = -10
+            reward = -12
             done = 1
             stop = 0
             emergence_break = 100
             return reward, done, stop, emergence_break
-    elif next_boss_blood - boss_blood > 15:   #boss dead
+    elif next_boss_blood - boss_blood > 15:  # boss dead
         if emergence_break < 2:
             reward = 20
             done = 0
@@ -112,20 +136,108 @@ def action_judge(boss_blood, next_boss_blood, self_blood, next_self_blood, self_
     else:
         self_blood_reward = 0
         boss_blood_reward = 0
+        self_body_reward = 0
+        boss_body_reward = 0
+        perfect_reward = 0
         # print(next_self_blood - self_blood)
         # print(next_boss_blood - boss_blood)
         if next_self_blood - self_blood < -7:
             if stop == 0:
-                self_blood_reward = -6
+                self_blood_reward = -10
+                stop = 1
+                # 防止连续取帧时一直计算掉血
+        else:
+            stop = 0
+        if next_boss_blood - boss_blood <= -1.5:
+            boss_blood_reward = 6
+        if next_boss_blood <= 0.5:
+            boss_blood_reward = 20
+        # print("self_blood_reward:    ",self_blood_reward)
+        # print("boss_blood_reward:    ",boss_blood_reward)
+        if next_self_body - self_body >= 5:
+            if next_boss_body - boss_body >= 7:
+                self_body_reward = 1
+            else:
+                self_body_reward = -2.5
+        if next_self_body - self_body <= -3:
+            self_body_reward += 0.5
+
+        if next_boss_body - boss_body >= 7:
+            boss_body_reward = 1
+
+        if next_boss_body - boss_body <-3 :
+            boss_body_reward += -1
+
+
+
+        reward = self_blood_reward + boss_blood_reward + self_body_reward + boss_body_reward
+        done = 0
+        emergence_break = 0
+        return reward, done, stop, emergence_break
+
+
+def action_judge11(boss_blood, next_boss_blood, self_blood, next_self_blood, stop, emergence_break):
+    # get action reward
+    # emergence_break is used to break down training
+    # 用于防止出现意外紧急停止训练防止错误训练数据扰乱神经网络
+    if next_self_blood < 3:     # self dead
+        if emergence_break < 2:
+            reward = -15
+            done = 1
+            stop = 0
+            emergence_break += 1
+            return reward, done, stop, emergence_break
+        else:
+            reward = -15
+            done = 1
+            stop = 0
+            emergence_break = 100
+            return reward, done, stop, emergence_break
+    elif next_boss_blood - boss_blood == 0:   #boss dead
+        if emergence_break < 2:
+            reward = 30
+            done = 0
+            stop = 0
+            emergence_break += 1
+            return reward, done, stop, emergence_break
+        else:
+            reward = 30
+            done = 0
+            stop = 0
+            emergence_break = 100
+            return reward, done, stop, emergence_break
+    else:
+        self_blood_reward = 0
+        boss_blood_reward = 0
+        self_body_reward = 0
+        boss_body_reward = 0
+        perfect_reward = 0
+        # print(next_self_blood - self_blood)
+        # print(next_boss_blood - boss_blood)
+        if next_self_blood - self_blood < -7:
+            if stop == 0:
+                self_blood_reward = -12
                 stop = 1
                 # 防止连续取帧时一直计算掉血
         else:
             stop = 0
         if next_boss_blood - boss_blood <= -3:
-            boss_blood_reward = 4
+            boss_blood_reward = 8
         # print("self_blood_reward:    ",self_blood_reward)
         # print("boss_blood_reward:    ",boss_blood_reward)
-        reward = self_blood_reward + boss_blood_reward
+
+        if next_self_body - self_body >= 2:
+            self_body_reward = -3
+
+
+        if next_boss_body - boss_body >= 3:
+            boss_body_reward = 2
+
+        if (next_self_body-self_body >= 0.5) and (next_boss_body - boss_body >0):
+            perfect_reward = 4
+
+
+        reward = self_blood_reward + boss_blood_reward + self_body_reward + boss_body_reward + perfect_reward
         done = 0
         emergence_break = 0
         return reward, done, stop, emergence_break
@@ -135,10 +247,10 @@ DQN_model_path = "model_gpu"
 DQN_log_path = "logs_gpu/"
 WIDTH = 96
 HEIGHT = 88
-window_size = (320,100,704,452)#384,352  192,176 96,88 48,44 24,22
+window_size = (320, 80, 720, 547) #384,352  192,176 96,88 48,44 24,22
 # station window_size
 
-blood_window = (60, 95, 290, 572)
+blood_window = (61, 95, 290, 572)
 # used to get boss and self blood
 
 action_size = 5
@@ -174,6 +286,11 @@ if __name__ == '__main__':
         boss_blood = boss_blood_count(blood_window_gray)
         self_blood = self_blood_count(blood_window_gray)
         # count init blood
+
+        self_body = self_body_count(screen_gray)
+        boss_body = boss_body_count(screen_gray)
+        # get the body count of boss and sekiro
+
         target_step = 0
         # used to update target Q network
         done = 0
@@ -199,8 +316,12 @@ if __name__ == '__main__':
             next_station = np.array(next_station).reshape(-1,HEIGHT,WIDTH,1)[0]
             next_boss_blood = boss_blood_count(blood_window_gray)
             next_self_blood = self_blood_count(blood_window_gray)
+            next_self_body = self_body_count(screen_gray)
+            next_boss_body = boss_body_count(screen_gray)
             reward, done, stop, emergence_break = action_judge(boss_blood, next_boss_blood,
                                                                self_blood, next_self_blood,
+                                                               self_body,next_self_body,
+                                                               boss_body, next_boss_body,
                                                                stop, emergence_break)
             # get action reward
             if emergence_break == 100:
